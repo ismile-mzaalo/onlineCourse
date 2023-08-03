@@ -1,14 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Flex } from "@chakra-ui/react";
-import LoginScreen from "./screens/LoginScreen";
 import Dashboard from "./screens/Dashboard";
-import CreateCourseScreen from "./screens/CreateCourseScreen";
-import CreateLectureScreen from "./screens/CreateLectureScreen";
 import Footer from "./components/Footer";
+import Header from "./components/Header";
 
 const App = () => {
   return (
     <BrowserRouter>
+      <Header />
       <Flex
         as="main"
         direction="column"
@@ -16,13 +15,10 @@ const App = () => {
         minH="xl"
         py="6"
         px="6"
-        bgColor="WhiteAlpha 900"
+        bgColor="blackAlpha.900"
       >
         <Routes>
-          <Route path="/" element={<LoginScreen />}></Route>
-          <Route path="/dashboard" element={<Dashboard />}></Route>
-          <Route path="/createCourse" element={<CreateCourseScreen />}></Route>
-          <Route path="/course/:id" element={<CreateLectureScreen />} />
+          <Route path="/" element={<Dashboard />} />
         </Routes>
       </Flex>
       <Footer />

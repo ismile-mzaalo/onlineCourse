@@ -1,68 +1,54 @@
-import { Box, Grid, Link, Flex, Heading, Text, Button } from "@chakra-ui/react";
+import { Grid, Link, Flex, Heading, Text, Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import axios from "axios";
-import { Apis } from "../api/backendApi";
-import Course from "../components/Course";
-import Loader from "../components/Loader";
+import Card from "../components/Card";
 import Message from "../components/Message";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-
-  const [user, setUser] = useState({});
-  const [courses, setCourses] = useState([]);
+  const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  async function getCourse() {
+  async function getUsers() {
     try {
-      const { data } = await axios.get(Apis.GetCourse);
-      setCourses(data);
+      const users = JSON.parse(localStorage.getItem("Users"));
+      if (users) {
+        setUsers(users);
+        return;
+      }
+      const { data } = await axios.get(
+        "http://www.mocky.io/v2/5d1ef97d310000552febe99d"
+      );
+
+      setUsers(data);
+      localStorage.setItem("Users", JSON.stringify(data));
     } catch (err) {
       setError(
         err.response && err.response.data.message
           ? err.response.data.message
           : err.message
       );
-      setLoading(false);
     }
   }
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("userInfo"));
-    setUser(userData);
-
-    getCourse();
+    getUsers();
   }, []);
+
   return (
     <>
-      {user.isAdmin ? (
-        <>
-          <Flex m={3}>
-            <Button onClick={() => navigate("/createCourse")}>
-              Click here to Create course +
-            </Button>
-          </Flex>
-          <p>-- click on course to create and Assign lectures --</p>
-          <Grid
-            templateColumns={{
-              sm: "1fr",
-              md: "1fr 1fr",
-              lg: "1fr 1fr 1fr 1fr",
-            }}
-            gap="8"
-          >
-            {courses.map((i) => (
-              <Course key={i._id} course={i} />
-            ))}
-          </Grid>
-        </>
-      ) : (
-        <Heading as="h1" mb="8" fontSize="3xl">
-          Login
-        </Heading>
-      )}
+      {error && <Message type="error">{error}</Message>}
+      <Grid
+        templateColumns={{
+          sm: "1fr",
+          lg: "1fr 1fr",
+        }}
+        gap="8"
+      >
+        {users.map((i) => (
+          <Card key={i._id} user={i} />
+        ))}
+      </Grid>
     </>
   );
 };
