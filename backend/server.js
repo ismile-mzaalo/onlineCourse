@@ -1,34 +1,67 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
+const multer = require("multer");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const connectDB = require("./config/db");
-const uploadRoutes = require("./routes/uploadRoutes");
-const userRouters = require("./routes/userRoutes");
+const Food = require("./models/foodModel");
 
 dotenv.config();
 
 connectDB();
 
 const app = express();
+const upload = multer({ dest: "uploads/" });
 
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use("/api/user", userRouters);
-app.use("/api/uploads", uploadRoutes);
+app.post("/api/food", async (req, res) => {
+  try {
+    const product = new Food({
+      productName: req.body.productName,
+      sizesAndSKUs: req.body.sizesAndSKUs,
+      price: req.body.price,
+      ingredients: req.body.ingredients,
+      nutritionInfo: req.body.nutritionInfo,
+      description: req.body.description,
+      isVegetarian: req.body.isVegetarian,
+    });
 
-const dirname = path.resolve();
-app.use("/uploads", express.static(path.join(dirname, "/uploads")));
+    await product.save();
+    res.status(201).json({ message: "Food added successfully", product });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: err.message });
+  }
+});
+
+app.put("/api/food/:id", upload.array("images", 5), async (req, res) => {
+  try {
+    const food = await Food.findById(req.params.id);
+
+    const images = await req.files.map((file) => file.path);
+
+    food.images = images;
+
+    const updatedImage = await food.save();
+
+    res.json(updatedImage);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: err.message });
+  }
+});
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(dirname, "/client/build")));
+  app.use(express.static(path.join(__dirname, "/client/build")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(dirname, "client", "build", "index.html"));
+    res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
   });
 } else {
   app.get("/", (req, res) => {
